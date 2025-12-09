@@ -5,7 +5,8 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         // Hardcoded URL for easy deployment avoiding Env vars setup
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbziEmQVaxFvWDYEbXXy6SUCA80VYQqbkKaUOf25jFqlbe7-lq7TJrghi7xpHlxO29Qd/exec";
+        // Updated URL with Auto-Header logic
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbwjvjTukBwwZ7tfrqS3hNSBxF5emE8Z1iqcWYwuKOiEFYMZVuO1dGE1Z6yi46SOfg/exec";
 
         if (!scriptUrl) {
             return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
