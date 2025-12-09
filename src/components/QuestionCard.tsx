@@ -60,7 +60,7 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                         >
                             <Star
                                 className={cn(
-                                    "w-10 h-10 sm:w-14 sm:h-14 transition-colors duration-200",
+                                    "w-12 h-12 sm:w-16 sm:h-16 transition-colors duration-200", // Bigger stars for mobile
                                     star <= (value || 0)
                                         ? "fill-teal-400 text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]"
                                         : "text-slate-700 group-hover:text-slate-500"
@@ -92,8 +92,8 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                                 : "bg-slate-800 border-slate-700 text-gray-300 hover:border-slate-500 hover:bg-slate-700 hover:text-white"
                         )}
                     >
-                        <span className="text-base sm:text-lg leading-relaxed">{option}</span>
-                        {value === option && <Check className="w-5 h-5 text-teal-400 shrink-0 ml-4" />}
+                        <span className="text-lg leading-relaxed">{option}</span> {/* Bigger/Standard text */}
+                        {value === option && <Check className="w-6 h-6 text-teal-400 shrink-0 ml-4" />}
                     </button>
                 ))}
             </div>

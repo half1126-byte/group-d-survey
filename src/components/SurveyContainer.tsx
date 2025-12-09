@@ -190,7 +190,7 @@ export default function SurveyContainer() {
     const progress = ((currentStep + 1) / SURVEY_QUESTIONS.length) * 100;
 
     return (
-        <div className="min-h-screen bg-deep-navy flex flex-col relative overflow-hidden text-white">
+        <div className="min-h-[100dvh] bg-deep-navy flex flex-col relative overflow-hidden text-white">
             <Logo />
             <ProgressBar progress={progress} />
 

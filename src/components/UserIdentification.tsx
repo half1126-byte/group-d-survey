@@ -29,7 +29,7 @@ export default function UserIdentification({ onComplete }: UserIdentificationPro
 
     return (
         <motion.div
-            className="flex flex-col items-center justify-center min-h-screen p-6 max-w-md mx-auto w-full"
+            className="flex flex-col items-center justify-center min-h-[100dvh] p-6 max-w-md mx-auto w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -50,7 +50,7 @@ export default function UserIdentification({ onComplete }: UserIdentificationPro
                             value={info.hospitalName}
                             onChange={(e) => setInfo({ ...info, hospitalName: e.target.value })}
                             placeholder="예) 그룹디 치과"
-                            className="w-full p-4 bg-slate-900 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-teal-500 outline-none transition-all placeholder-slate-600"
+                            className="w-full p-4 bg-slate-900 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-teal-500 outline-none transition-all placeholder-slate-600 text-lg"
                             autoFocus
                         />
                     </div>
@@ -60,7 +60,7 @@ export default function UserIdentification({ onComplete }: UserIdentificationPro
                         <label className="text-sm text-slate-400 flex items-center gap-2">
                             <Badge className="w-4 h-4" /> 직책
                         </label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {roles.map((r) => (
                                 <button
                                     key={r}
@@ -87,7 +87,7 @@ export default function UserIdentification({ onComplete }: UserIdentificationPro
                             value={info.name}
                             onChange={(e) => setInfo({ ...info, name: e.target.value })}
                             placeholder="예) 홍길동"
-                            className="w-full p-4 bg-slate-900 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-teal-500 outline-none transition-all placeholder-slate-600"
+                            className="w-full p-4 bg-slate-900 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-teal-500 outline-none transition-all placeholder-slate-600 text-lg"
                         />
                     </div>
 

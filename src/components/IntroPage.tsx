@@ -10,7 +10,7 @@ interface IntroPageProps {
 export default function IntroPage({ onStart }: IntroPageProps) {
     return (
         <motion.div
-            className="flex flex-col items-center justify-center min-h-screen p-6 text-center max-w-md mx-auto"
+            className="flex flex-col items-center justify-center min-h-[100dvh] p-6 text-center max-w-md mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
