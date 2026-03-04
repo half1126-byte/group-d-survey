@@ -4,9 +4,8 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        // Hardcoded URL for easy deployment avoiding Env vars setup
-        // Updated URL with Auto-Header logic
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbwjvjTukBwwZ7tfrqS3hNSBxF5emE8Z1iqcWYwuKOiEFYMZVuO1dGE1Z6yi46SOfg/exec";
+        // Use environment variable for the script URL to allow different destinations per deployment
+        const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
 
         if (!scriptUrl) {
             return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
