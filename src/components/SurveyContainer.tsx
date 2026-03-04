@@ -81,20 +81,24 @@ export default function SurveyContainer() {
         };
         setAnswers(newAnswers);
 
-        // Auto-advance for simple types
-        if (['rating', 'select', 'nps'].includes(question.type)) { // Added 'nps' back
-            setTimeout(() => {
-                handleNext(newAnswers);
-            }, 400);
+        // Auto-advance for simple types (skip if reason input would show)
+        if (['rating', 'select', 'nps'].includes(question.type)) {
+            // Check if a conditional reason textarea will appear
+            const shouldShowReason =
+                (question.type === 'rating' && question.conditionalRatingThreshold && typeof value === 'number' && value <= question.conditionalRatingThreshold) ||
+                (question.type === 'select' && question.conditionalTriggerOptions?.includes(value as string));
+
+            if (!shouldShowReason) {
+                setTimeout(() => {
+                    handleNext(newAnswers);
+                }, 400);
+            }
         }
     };
 
     const handleNext = (currentAnswers = answers) => {
         // Validation
         const answer = currentAnswers[currentQuestion.id];
-        // Check validation only for this step
-        // Note: if answer is 0 (NPS), previous check (!answer.value) might fail if value is number 0. 
-        // Fix validation logic.
         if (!answer) return;
 
         // Strict check for empty strings or empty arrays
@@ -102,17 +106,43 @@ export default function SurveyContainer() {
             return;
         }
 
-        if (currentStep < SURVEY_QUESTIONS.length - 1) {
-            setCurrentStep(prev => prev + 1);
+        const nextStep = findNextStep(currentStep, currentAnswers);
+        if (nextStep !== null) {
+            setCurrentStep(nextStep);
         } else {
             finishSurvey(currentAnswers);
         }
     };
 
-    const handlePrev = () => {
-        if (currentStep > 0) {
-            setCurrentStep(prev => prev - 1);
+    const findNextStep = (step: number, currentAnswers: Record<number, Answer>): number | null => {
+        let next = step + 1;
+        while (next < SURVEY_QUESTIONS.length) {
+            const q = SURVEY_QUESTIONS[next];
+            if (!q.logic || q.logic.showIf(currentAnswers)) {
+                return next;
+            }
+            next++;
         }
+        return null;
+    };
+
+    const handlePrev = () => {
+        const prevStep = findPrevStep(currentStep, answers);
+        if (prevStep !== null) {
+            setCurrentStep(prevStep);
+        }
+    };
+
+    const findPrevStep = (step: number, currentAnswers: Record<number, Answer>): number | null => {
+        let prev = step - 1;
+        while (prev >= 0) {
+            const q = SURVEY_QUESTIONS[prev];
+            if (!q.logic || q.logic.showIf(currentAnswers)) {
+                return prev;
+            }
+            prev--;
+        }
+        return null;
     };
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -151,12 +181,18 @@ export default function SurveyContainer() {
         if (status !== 'survey') return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                // Prevent next if in a textarea to allow newlines
+                if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
                 handleNext();
             }
 
+            if (e.key === 'Backspace' && (e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                handlePrev();
+            }
+
             const num = parseInt(e.key);
-            if (!isNaN(num)) {
+            if (!isNaN(num) && (e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
                 // NPS 0-9 support? Or just 1-5 for rating.
                 // If NPS, mapping keys might be complex (0 vs 10). Let's stick to 1-5 for Rating/Select.
                 if (currentQuestion.type === 'rating' && num >= 1 && num <= 5) {
@@ -192,7 +228,11 @@ export default function SurveyContainer() {
     return (
         <div className="min-h-[100dvh] bg-deep-navy flex flex-col relative overflow-hidden text-white">
             <Logo />
-            <ProgressBar progress={progress} />
+            <ProgressBar
+                progress={progress}
+                current={currentStep + 1}
+                total={SURVEY_QUESTIONS.length}
+            />
 
             {/* Loading Overlay */}
             {isSubmitting && (

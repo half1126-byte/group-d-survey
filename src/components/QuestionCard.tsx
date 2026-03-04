@@ -49,6 +49,8 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
 
     // Handling Star Rating (1-5)
     const renderRating = () => {
+        const showReason = question.conditionalRatingThreshold && typeof value === 'number' && value <= question.conditionalRatingThreshold;
+
         return (
             <div className="flex flex-col items-center gap-4 py-6">
                 <div className="flex justify-center gap-2">
@@ -60,7 +62,7 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                         >
                             <Star
                                 className={cn(
-                                    "w-12 h-12 sm:w-16 sm:h-16 transition-colors duration-200", // Bigger stars for mobile
+                                    "w-12 h-12 sm:w-16 sm:h-16 transition-colors duration-200",
                                     star <= (value || 0)
                                         ? "fill-teal-400 text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]"
                                         : "text-slate-700 group-hover:text-slate-500"
@@ -73,12 +75,39 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                     <span>매우 불만족</span>
                     <span>매우 만족</span>
                 </div>
+
+                {showReason && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="w-full mt-2"
+                    >
+                        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                            <label className="block text-sm font-medium text-slate-400 mb-2">
+                                추가 의견
+                            </label>
+                            <textarea
+                                className="w-full p-4 border border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none bg-slate-900 text-white placeholder-slate-500"
+                                rows={3}
+                                placeholder={question.conditionalPlaceholder || "낮은 점수를 주신 이유를 알려주세요."}
+                                value={otherText}
+                                onChange={(e) => {
+                                    setOtherText(e.target.value);
+                                    onChange(value, e.target.value);
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </motion.div>
+                )}
             </div>
         );
     };
 
     // Handling Select
     const renderSelect = () => {
+        const hasTrigger = question.conditionalTriggerOptions?.includes(value as string);
+
         return (
             <div className="flex flex-col gap-3">
                 {question.options?.map((option) => (
@@ -92,32 +121,67 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                                 : "bg-slate-800 border-slate-700 text-gray-300 hover:border-slate-500 hover:bg-slate-700 hover:text-white"
                         )}
                     >
-                        <span className="text-lg leading-relaxed">{option}</span> {/* Bigger/Standard text */}
+                        <span className="text-lg leading-relaxed">{option}</span>
                         {value === option && <Check className="w-6 h-6 text-teal-400 shrink-0 ml-4" />}
                     </button>
                 ))}
+
+                {hasTrigger && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mt-2"
+                    >
+                        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                            <label className="block text-sm font-medium text-slate-400 mb-2">
+                                추가 의견
+                            </label>
+                            <textarea
+                                className="w-full p-4 border border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none bg-slate-900 text-white placeholder-slate-500"
+                                rows={3}
+                                placeholder={question.conditionalPlaceholder || "이유를 적어주세요."}
+                                value={otherText}
+                                onChange={(e) => {
+                                    setOtherText(e.target.value);
+                                    onChange(value, e.target.value);
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </motion.div>
+                )}
             </div>
         );
     };
 
-    // Handling MultiSelect
+    // Handling MultiSelect (Checkbox)
     const renderMultiSelect = () => {
         const currentValues = (Array.isArray(value) ? value : []) as string[];
+        const maxSelections = question.maxSelections || 10;
 
         const toggleOption = (option: string) => {
             let newValues;
             if (currentValues.includes(option)) {
                 newValues = currentValues.filter(v => v !== option);
             } else {
+                if (currentValues.length >= maxSelections) {
+                    // Force replace or just ignore? instructions say "2 selections possible", usually means limit.
+                    // Let's prevent adding more if limit reached.
+                    return;
+                }
                 newValues = [...currentValues, option];
             }
             onChange(newValues, otherText);
         };
 
-        const isOtherSelected = currentValues.includes("기타");
+        const hasTrigger = question.conditionalTriggerOptions?.some(opt => currentValues.includes(opt));
 
         return (
             <div className="flex flex-col gap-3">
+                <div className="text-xs text-slate-500 mb-1 flex justify-between items-center">
+                    <span>최대 {maxSelections}개 선택 가능</span>
+                    <span>{currentValues.length} / {maxSelections}</span>
+                </div>
                 {question.options?.map((option) => (
                     <button
                         key={option}
@@ -125,33 +189,43 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                         className={cn(
                             "p-5 rounded-xl text-left transition-all shadow-sm border flex items-center justify-between group",
                             currentValues.includes(option)
-                                ? "bg-teal-500 text-deep-navy border-teal-500 shadow-lg shadow-teal-500/20 font-semibold"
+                                ? "bg-teal-500/20 border-teal-500 text-teal-400 font-semibold ring-1 ring-teal-500/50"
                                 : "bg-slate-800 border-slate-700 text-gray-300 hover:border-slate-500 hover:bg-slate-700 hover:text-white"
                         )}
                     >
                         <span className="text-base sm:text-lg leading-relaxed">{option}</span>
-                        {currentValues.includes(option) && <Check className="w-5 h-5 text-deep-navy shrink-0 ml-4" />}
+                        <div className={cn(
+                            "w-6 h-6 rounded-md border flex items-center justify-center transition-colors",
+                            currentValues.includes(option) ? "bg-teal-500 border-teal-500" : "bg-transparent border-slate-600 group-hover:border-slate-400"
+                        )}>
+                            {currentValues.includes(option) && <Check className="w-4 h-4 text-deep-navy stroke-[3]" />}
+                        </div>
                     </button>
                 ))}
 
-                {/* Other Input */}
-                {isOtherSelected && (
+                {/* Conditional Textarea Logic */}
+                {hasTrigger && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="mt-2"
+                        className="mt-4"
                     >
-                        <textarea
-                            className="w-full p-4 border border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none bg-slate-900 text-white placeholder-slate-500"
-                            rows={3}
-                            placeholder="내용을 입력해주세요..."
-                            value={otherText}
-                            onChange={(e) => {
-                                setOtherText(e.target.value);
-                                onChange(currentValues, e.target.value);
-                            }}
-                            autoFocus
-                        />
+                        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                            <label className="block text-sm font-medium text-slate-400 mb-2">
+                                추가 의견
+                            </label>
+                            <textarea
+                                className="w-full p-4 border border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none bg-slate-900 text-white placeholder-slate-500"
+                                rows={3}
+                                placeholder={question.conditionalPlaceholder || "내용을 입력해주세요..."}
+                                value={otherText}
+                                onChange={(e) => {
+                                    setOtherText(e.target.value);
+                                    onChange(currentValues, e.target.value);
+                                }}
+                                autoFocus
+                            />
+                        </div>
                     </motion.div>
                 )}
             </div>
@@ -191,7 +265,7 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                         </span>
                         {question.subCategory && (
                             <span className="ml-2 text-slate-400 text-sm font-medium">
-                                • {question.subCategory}
+                                - {question.subCategory}
                             </span>
                         )}
                     </motion.div>
@@ -220,16 +294,20 @@ export default function QuestionCard({ question, value, onChange, onNext }: Ques
                 </div>
 
                 {/* Navigation Help / Button for Manual Advance types */}
-                {['multiselect', 'text'].includes(question.type) && (
-                    <div className="mt-10 flex justify-end">
-                        <button
-                            onClick={onNext}
-                            className="bg-teal-500 text-deep-navy px-10 py-4 rounded-xl font-bold hover:bg-teal-400 transition-colors shadow-lg shadow-teal-500/20 active:scale-95 text-lg"
-                        >
-                            다음으로
-                        </button>
-                    </div>
-                )}
+                {(
+                    ['multiselect', 'text'].includes(question.type) ||
+                    (question.type === 'rating' && question.conditionalRatingThreshold && typeof value === 'number' && value <= question.conditionalRatingThreshold) ||
+                    (question.type === 'select' && question.conditionalTriggerOptions?.includes(value as string))
+                ) && (
+                        <div className="mt-10 flex justify-end">
+                            <button
+                                onClick={onNext}
+                                className="bg-teal-500 text-deep-navy px-10 py-4 rounded-xl font-bold hover:bg-teal-400 transition-colors shadow-lg shadow-teal-500/20 active:scale-95 text-lg"
+                            >
+                                다음으로
+                            </button>
+                        </div>
+                    )}
             </div>
         </motion.div>
     );
